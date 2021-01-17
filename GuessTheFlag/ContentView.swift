@@ -32,12 +32,27 @@ extension Image {
 //    }
 //}
 
+// https://www.objc.io/blog/2019/10/01/swiftui-shake-animation/
+struct Shake: GeometryEffect {
+    var amount: CGFloat = 10
+    var shakesPerUnit = 3
+    var animatableData: CGFloat
+
+    func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX:
+            amount * sin(animatableData * .pi * CGFloat(shakesPerUnit)),
+            y: 0))
+    }
+}
+
+
 struct ContentView: View {
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Russia", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
     @State private var showingScore = false
     @State private var scoreTitle = ""
     @State private var currentScore = (correctCount: 0, incorrectCount: 0)
+    @State var attempts: Int = 0
     
     var body: some View {
         ZStack {
@@ -58,10 +73,14 @@ struct ContentView: View {
                 ForEach(0 ..< 3) { number in
                     Button(action: {
                         self.flagTapped(number)
+                        withAnimation(.default) {
+                                            self.attempts += 1
+                                        }
                     }) {
                         Image(self.countries[number])
 //                            .renderingMode(.original)
                             .flagImage()
+                            .modifier(Shake(animatableData: CGFloat(attempts)))
                         
                     }
                 }.padding(.top, 20)
