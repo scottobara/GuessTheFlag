@@ -54,7 +54,8 @@ struct ContentView: View {
     @State private var currentScore = (correctCount: 0, incorrectCount: 0)
 //    @State var attempts: Int = 0
     @State private var incorrectPressed = [0, 0, 0]
-    @State private var correctPressed = [0, 0, 0]
+    @State private var correctPressed = [false, false, false]
+    @State private var correctNotPressed  = [false, false, false]
     
     var body: some View {
         ZStack {
@@ -75,16 +76,17 @@ struct ContentView: View {
                 ForEach(0 ..< 3) { number in
                     Button(action: {
                         self.flagTapped(number)
-//                        withAnimation(.easeInOut) {
-//                            correctPressed[number].toggle()
-//                        }
+                        if number == correctAnswer {
+                            correctPressed[number].toggle()
+                        }
                     }) {
                         Image(self.countries[number])
 //                            .renderingMode(.original)
                             .flagImage()
                             .modifier(Shake(animatableData: CGFloat(incorrectPressed[number])))
-                            .rotationEffect(Angle.degrees(correctPressed[number] >= 1 ? 360 : 0))
+                            .rotationEffect(Angle.degrees(correctPressed[number] ? 360 : 0))
                             .animation(.easeInOut)
+                            .opacity(correctNotPressed[number] ? 0.3 : 1)
                         
                     }
                 }.padding(.top, 20)
@@ -93,7 +95,7 @@ struct ContentView: View {
         }
         .alert(isPresented: $showingScore) {
             Alert(title: Text(scoreTitle), message: Text(
-                "Correct:  \(currentScore.correctCount), Incorrect: \(currentScore.incorrectCount) Debug: \(incorrectPressed.description)"
+                "Correct:  \(currentScore.correctCount), Incorrect: \(currentScore.incorrectCount)" //Debug: \(correctPressed.description)
             ), dismissButton: .default(Text("Continue")) {
                 self.askQuestion()
                 
@@ -105,7 +107,13 @@ struct ContentView: View {
         if number == correctAnswer {
             scoreTitle = "Correct"
             currentScore.correctCount += 1
-            correctPressed[number] += 1
+            //correctPressed[number] += 1
+            //correctPressed[number].toggle()
+            for button in 0..<3 {
+                if button != number {
+                    correctNotPressed[button] = true
+                }
+            }
         } else {
             scoreTitle = """
                 Wrong
@@ -118,12 +126,14 @@ struct ContentView: View {
         }
 
         showingScore = true
-        
+   
     }
     
     func askQuestion() {
 //        incorrectPressed = [0, 0, 0]
 //        correctPressed = [0, 0, 0]
+//        correctPressed = [false, false, false]
+        correctNotPressed  = [false, false, false]
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
     }
